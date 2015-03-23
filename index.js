@@ -24,6 +24,7 @@
  */
 
 var http       = require('http');
+var https      = require('https');
 var url        = require('url');
 var util       = require('util');
 var config     = require('config');
@@ -49,14 +50,27 @@ exports.init = function() {
 
         hrefs.forEach(function(href) {
             var options = url.parse(href);
+            var connection = options.protocol.indexOf('https') > -1 ? https : http;
             options.method = 'POST';
             options.headers = {
                 'Content-Type' : 'application/json'
             };
 
-            var req = http.request(options, function(res) {
+	    if (options.protocol === 'http:') {
+                var req = http.request(options, function(res) {
+                    res.on('data', function(data)  {
+                        console.log(data.toString());
+                    });
+                });
+            }
+            else if (options.protocol === 'https:') {
+                var req = https.request(options, function(res) {
+                    res.on('data', function(data) {
+                        console.log(data.toString());
+                    });
+                });
+            }
 
-            });
 
             req.on('error', function(e) {
               console.log('Problem with webhook request: ' + e.message);
